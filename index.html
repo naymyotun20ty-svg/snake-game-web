@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Snake Game Online</title>
+  <style>
+    body {
+      background-color: #222;
+      color: #fff;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+    }
+    canvas {
+      background: #000;
+      margin-top: 20px;
+      border: 2px solid #fff;
+    }
+    #info {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Snake Game 🐍</h1>
+  <div id="info">Use arrow keys to move</div>
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const box = 20;  // ขนาดแต่ละช่อง
+    const widthInBoxes = canvas.width / box;
+    const heightInBoxes = canvas.height / box;
+
+    let snake = [{ x: 5 * box, y: 5 * box }];
+    let dir = null;
+    let food = spawnFood();
+    let score = 0;
+
+    document.addEventListener("keydown", changeDirection);
+
+    function changeDirection(e) {
+      const key = e.key;
+      if (key === "ArrowLeft" && dir !== "RIGHT") dir = "LEFT";
+      else if (key === "ArrowUp" && dir !== "DOWN") dir = "UP";
+      else if (key === "ArrowRight" && dir !== "LEFT") dir = "RIGHT";
+      else if (key === "ArrowDown" && dir !== "UP") dir = "DOWN";
+    }
+
+    function spawnFood() {
+      return {
+        x: Math.floor(Math.random() * widthInBoxes) * box,
+        y: Math.floor(Math.random() * heightInBoxes) * box
+      };
+    }
+
+    function draw() {
+      // เคลียร์พื้นหลัง
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // วาดอาหาร
+      ctx.fillStyle = "red";
+      ctx.fillRect(food.x, food.y, box, box);
+
+      // วาดงู
+      snake.forEach((segment, index) => {
+        ctx.fillStyle = (index === 0) ? "lime" : "green";
+        ctx.fillRect(segment.x, segment.y, box, box);
+      });
+
+      // คำนวณตำแหน่งหัวใหม่
+      let headX = snake[0].x;
+      let headY = snake[0].y;
+      if (dir === "LEFT") headX -= box;
+      if (dir === "RIGHT") headX += box;
+      if (dir === "UP") headY -= box;
+      if (dir === "DOWN") headY += box;
+
+      let newHead = { x: headX, y: headY };
+
+      // ตรวจสอบชนขอบ
+      if (
+        headX < 0 || headX >= canvas.width ||
+        headY < 0 || headY >= canvas.height ||
+        collision(newHead, snake)
+      ) {
+        clearInterval(gameLoop);
+        alert("Game Over! Score: " + score);
+        return;
+      }
+
+      // ถ้าอาหารโดนกิน
+      if (headX === food.x && headY === food.y) {
+        score += 1;
+        food = spawnFood();
+      } else {
+        snake.pop();  // เอาท้ายออก ถ้าไม่ได้กิน
+      }
+
+      // เพิ่มหัว
+      snake.unshift(newHead);
+
+      // วาดคะแนน
+      ctx.fillStyle = "white";
+      ctx.font = "20px Arial";
+      ctx.fillText("Score: " + score, 8, 20);
+    }
+
+    function collision(head, body) {
+      for (let i = 0; i < body.length; i++) {
+        if (head.x === body[i].x && head.y === body[i].y) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    let gameLoop = setInterval(draw, 100);
+  </script>
+</body>
+  </html>
